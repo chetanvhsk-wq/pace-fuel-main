@@ -1,0 +1,233 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {uid}
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required, email format)
+    //   - displayName: string (optional)
+    //   - photoURL: string (optional)
+    //   - athleteType: string (optional, enum: endurance, strength, hybrid, general)
+    //   - goal: string (optional, enum: performance, weight-loss, muscle-gain, maintenance)
+    //   - activityLevel: string (optional, enum: sedentary, moderate, active, pro)
+    //   - dietPreference: string (optional, enum: north-indian, south-indian, vegetarian, non-vegetarian, vegan, eggetarian)
+    //   - dailyCalorieGoal: number (required)
+    //   - dailyWaterGoal: number (required)
+    //   - dailyProteinGoal: number (required)
+    //   - dailyCarbsGoal: number (required)
+    //   - dailyFatsGoal: number (required)
+    //   - createdAt: string (required, date-time)
+    //
+    // Collection: supplementLogs
+    // Document ID: auto-generated
+    // Fields:
+    //   - userId: string (required)
+    //   - name: string (required)
+    //   - dosage: string (optional)
+    //   - timestamp: string (required, date-time)
+    //   - taken: boolean (optional)
+    //
+    // Collection: foodLogs
+    // Document ID: auto-generated
+    // Fields:
+    //   - userId: string (required)
+    //   - name: string (required)
+    //   - calories: number (required)
+    //   - protein: number (required)
+    //   - carbs: number (required)
+    //   - fats: number (required)
+    //   - mealType: string (required, enum: breakfast, lunch, dinner, snack)
+    //   - timestamp: string (required, date-time)
+    //   - imageUrl: string (optional)
+    //
+    // Collection: waterLogs
+    // Document ID: auto-generated
+    // Fields:
+    //   - userId: string (required)
+    //   - amount: number (required)
+    //   - timestamp: string (required, date-time)
+    //
+    // Collection: wellnessSessions
+    // Document ID: auto-generated
+    // Fields:
+    //   - userId: string (required)
+    //   - type: string (required, enum: meditation, sleep, stress)
+    //   - duration: number (required)
+    //   - score: number (optional)
+    //   - timestamp: string (required, date-time)
+    //
+    // Collection: exercises
+    // Document ID: auto-generated
+    // Fields:
+    //   - userId: string (required)
+    //   - name: string (required)
+    //   - duration: number (required)
+    //   - caloriesBurned: number (required)
+    //   - intensity: string (required, enum: low, moderate, high)
+    //   - timestamp: string (required, date-time)
+    //
+    // Collection: stepLogs
+    // Document ID: auto-generated
+    // Fields:
+    //   - userId: string (required)
+    //   - steps: number (required)
+    //   - timestamp: string (required, date-time)
+    //
+    // ===============================================================
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    function isNewDocOwner() {
+      return isAuthenticated() && request.auth.uid == request.resource.data.userId;
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidDateString(dateStr) {
+      return dateStr is string && dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // Domain Validators
+    function isValidUser(data) {
+      return data.uid == request.auth.uid &&
+             (!('email' in data) || data.email == null || (data.email is string && isValidEmail(data.email))) &&
+             data.dailyCalorieGoal is number && data.dailyCalorieGoal > 0 &&
+             data.dailyWaterGoal is number && data.dailyWaterGoal > 0 &&
+             isValidDateString(data.createdAt) &&
+             (!('athleteType' in data) || data.athleteType in ['endurance', 'strength', 'hybrid', 'general']) &&
+             (!('goal' in data) || data.goal in ['performance', 'weight-loss', 'muscle-gain', 'maintenance']) &&
+             (!('activityLevel' in data) || data.activityLevel in ['sedentary', 'moderate', 'active', 'pro']) &&
+             (!('dietPreference' in data) || data.dietPreference in ['north-indian', 'south-indian', 'vegetarian', 'non-vegetarian', 'vegan', 'eggetarian']);
+    }
+
+    function isValidSupplementLog(data) {
+      return data.userId == request.auth.uid &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             isValidDateString(data.timestamp);
+    }
+
+    function isValidFoodLog(data) {
+      return data.userId == request.auth.uid &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.calories is number && data.calories >= 0 &&
+             data.mealType in ['breakfast', 'lunch', 'dinner', 'snack'] &&
+             isValidDateString(data.timestamp);
+    }
+
+    function isValidWaterLog(data) {
+      return data.userId == request.auth.uid &&
+             data.amount is number && data.amount > 0 &&
+             isValidDateString(data.timestamp);
+    }
+
+    function isValidWellnessSession(data) {
+      return data.userId == request.auth.uid &&
+             data.type in ['meditation', 'sleep', 'stress'] &&
+             data.duration is number && data.duration > 0 &&
+             isValidDateString(data.timestamp);
+    }
+
+    function isValidExercise(data) {
+      return data.userId == request.auth.uid &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.duration is number && data.duration > 0 &&
+             data.caloriesBurned is number && data.caloriesBurned >= 0 &&
+             data.intensity in ['low', 'moderate', 'high'] &&
+             isValidDateString(data.timestamp);
+    }
+
+    function isValidStepLog(data) {
+      return data.userId == request.auth.uid &&
+             data.steps is number && data.steps >= 0 &&
+             isValidDateString(data.timestamp);
+    }
+
+    function isValidWeightLog(data) {
+      return data.userId == request.auth.uid &&
+             data.weight is number && data.weight > 0 &&
+             isValidDateString(data.timestamp);
+    }
+
+    // Rules
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+      allow delete: if isOwner(userId);
+    }
+
+    match /foodLogs/{logId} {
+      allow read: if isDocOwner();
+      allow create: if isNewDocOwner() && isValidFoodLog(request.resource.data);
+      allow update: if isDocOwner() && isNewDocOwner() && isValidFoodLog(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /waterLogs/{logId} {
+      allow read: if isDocOwner();
+      allow create: if isNewDocOwner() && isValidWaterLog(request.resource.data);
+      allow update: if isDocOwner() && isNewDocOwner() && isValidWaterLog(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /wellnessSessions/{sessionId} {
+      allow read: if isDocOwner();
+      allow create: if isNewDocOwner() && isValidWellnessSession(request.resource.data);
+      allow update: if isDocOwner() && isNewDocOwner() && isValidWellnessSession(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /supplementLogs/{logId} {
+      allow read: if isDocOwner();
+      allow create: if isNewDocOwner() && isValidSupplementLog(request.resource.data);
+      allow update: if isDocOwner() && isNewDocOwner() && isValidSupplementLog(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /exercises/{exerciseId} {
+      allow read: if isDocOwner();
+      allow create: if isNewDocOwner() && isValidExercise(request.resource.data);
+      allow update: if isDocOwner() && isNewDocOwner() && isValidExercise(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /stepLogs/{logId} {
+      allow read: if isDocOwner();
+      allow create: if isNewDocOwner() && isValidStepLog(request.resource.data);
+      allow update: if isDocOwner() && isNewDocOwner() && isValidStepLog(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /weight_logs/{logId} {
+      allow read: if isDocOwner();
+      allow create: if isNewDocOwner() && isValidWeightLog(request.resource.data);
+      allow update: if isDocOwner() && isNewDocOwner() && isValidWeightLog(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}

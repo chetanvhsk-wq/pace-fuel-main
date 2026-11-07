@@ -1,0 +1,9 @@
+{
+  "name": "Pace Fuel",
+  "description": "A high-performance nutrition and wellness app for athletes, featuring AI-powered food logging, Indian food database, and metabolic insights.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}

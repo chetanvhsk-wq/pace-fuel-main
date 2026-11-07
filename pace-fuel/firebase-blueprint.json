@@ -1,0 +1,150 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user settings and goals",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "athleteType": { "type": "string", "enum": ["endurance", "strength", "hybrid", "general"] },
+        "goal": { "type": "string", "enum": ["performance", "weight-loss", "muscle-gain", "maintenance"] },
+        "activityLevel": { "type": "string", "enum": ["sedentary", "moderate", "active", "pro"] },
+        "dietPreference": { "type": "string", "enum": ["north-indian", "south-indian", "vegetarian", "non-vegetarian", "vegan", "eggetarian"] },
+        "dailyCalorieGoal": { "type": "number" },
+        "dailyWaterGoal": { "type": "number" },
+        "dailyProteinGoal": { "type": "number" },
+        "dailyCarbsGoal": { "type": "number" },
+        "dailyFatsGoal": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "dailyCalorieGoal"]
+    },
+    "SupplementLogEntry": {
+      "title": "Supplement Log Entry",
+      "description": "Tracking supplements like vitamins, protein, etc.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "dosage": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "taken": { "type": "boolean" }
+      },
+      "required": ["userId", "name", "timestamp"]
+    },
+    "FoodLogEntry": {
+      "title": "Food Log Entry",
+      "description": "A single food item logged by the user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "calories": { "type": "number" },
+        "protein": { "type": "number" },
+        "carbs": { "type": "number" },
+        "fats": { "type": "number" },
+        "mealType": { "type": "string", "enum": ["breakfast", "lunch", "dinner", "snack"] },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "imageUrl": { "type": "string" }
+      },
+      "required": ["userId", "name", "calories", "timestamp"]
+    },
+    "WaterLogEntry": {
+      "title": "Water Log Entry",
+      "description": "Tracking water intake",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "amount", "timestamp"]
+    },
+    "WellnessSession": {
+      "title": "Wellness Session",
+      "description": "Meditation or sleep tracking",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["meditation", "sleep", "stress"] },
+        "duration": { "type": "number" },
+        "score": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "type", "duration", "timestamp"]
+    },
+    "ExerciseEntry": {
+      "title": "Exercise Entry",
+      "description": "A single fitness activity logged by the user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "duration": { "type": "number" },
+        "caloriesBurned": { "type": "number" },
+        "intensity": { "type": "string", "enum": ["low", "moderate", "high"] },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "duration", "caloriesBurned", "timestamp"]
+    },
+    "StepLogEntry": {
+      "title": "Step Log Entry",
+      "description": "Daily step count log",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "steps": { "type": "integer" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "steps", "timestamp"]
+    },
+    "WeightEntry": {
+      "title": "Weight Entry",
+      "description": "Daily weight log",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "weight": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "weight", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "UserProfile",
+      "description": "User profile documents"
+    },
+    "/foodLogs/{logId}": {
+      "schema": "FoodLogEntry",
+      "description": "Global food logs"
+    },
+    "/waterLogs/{logId}": {
+      "schema": "WaterLogEntry",
+      "description": "Global water logs"
+    },
+    "/wellnessSessions/{sessionId}": {
+      "schema": "WellnessSession",
+      "description": "Global wellness sessions"
+    },
+    "/supplementLogs/{logId}": {
+      "schema": "SupplementLogEntry",
+      "description": "Global supplement logs"
+    },
+    "/exercises/{exerciseId}": {
+      "schema": "ExerciseEntry",
+      "description": "Global exercise logs"
+    },
+    "/stepLogs/{logId}": {
+      "schema": "StepLogEntry",
+      "description": "Global step logs"
+    },
+    "/weight_logs/{logId}": {
+      "schema": "WeightEntry",
+      "description": "Global weight logs"
+    }
+  }
+}
