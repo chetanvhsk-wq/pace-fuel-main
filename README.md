@@ -254,7 +254,7 @@ PaceFuel was built by a 5-person team across 4 specialized layers. Each person o
 Every feature in PaceFuel flows through all four layers. The AI food analysis feature is the clearest example:
 
 1. **Bharath** designed the Analyze Meal interface and the post-scan macro display
-2. **Akshay & Aravind** built the trigger, formatted the API request with ImageID + UserID, dispatched it to the backend
+2. **Akshay & Aravind** built the trigger, formatted the API request with ImageID + UserID, dispatched it to the backend.
 3. **Chetan** received the raw image, ran computer vision to identify the food item, estimated the macro profile, and returned structured JSON
 4. **Akash** logged the result to Firestore, updated the user profile, and pushed the real-time refresh to the dashboard
 
